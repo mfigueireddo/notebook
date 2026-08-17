@@ -6,6 +6,7 @@
 | --- | --- |
 | [docs/](docs/) | Documentação (.md) |
 | [docs/decisions/](docs/decisions/) | Decisões de negócio |
+| [review/](review/) | Revisão pessoal das sessões |
 
 ## Arquivos
 
