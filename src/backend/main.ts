@@ -3,9 +3,8 @@ import type { FastifyInstance } from "fastify";
 import { getServerConfig } from "./config/serverConfig.js";
 import type { ServerConfig } from "./config/serverConfig.js";
 import { EXIT_CODES } from "./config/exitCodes.js";
+import { SHUTDOWN_SIGNALS } from "./config/shutdownSignals.js";
 import { buildServer } from "./server.js";
-
-const SHUTDOWN_SIGNALS: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
 
 /**
  * Objetivo: Encerra o servidor de forma ordenada quando o processo recebe um
@@ -23,9 +22,9 @@ const SHUTDOWN_SIGNALS: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
  * - O processo termina após o fechamento do servidor, com ou sem sucesso.
  */
 function registerShutdownHandlers(server: FastifyInstance): void {
-    for (const signal of SHUTDOWN_SIGNALS) {
-        process.once(signal, async (): Promise<void> => {
-            server.log.info(`Sinal ${signal} recebido. Encerrando o servidor.`);
+    for (const shutdown_entry of Object.values(SHUTDOWN_SIGNALS)) {
+        process.once(shutdown_entry.signal, async (): Promise<void> => {
+            server.log.info(`Sinal ${shutdown_entry.signal} recebido (${shutdown_entry.description}). Encerrando o servidor.`);
             try {
                 await server.close();
             } catch (shutdown_error: unknown) {
