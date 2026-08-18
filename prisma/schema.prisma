@@ -1,0 +1,59 @@
+// Esquema do banco de dados do backend do notebook.
+//
+// Objetivo: Descrever, num único lugar, as entidades persistidas pelo backend
+// e os relacionamentos entre elas. As migrations são geradas a partir daqui
+// (via `npx prisma migrate dev`) e o cliente TypeScript é gerado com
+// `npx prisma generate`.
+//
+// Restrições:
+// - Os nomes das tabelas e colunas são mantidos em snake_case para se alinhar
+//   ao padrão adotado no restante do backend (ver CLAUDE.md).
+// - Nenhum valor sensível (usuário, senha, host) é escrito neste arquivo; a
+//   URL de conexão é lida da variável de ambiente DATABASE_URL, cuja leitura
+//   também é centralizada em src/backend/config/databaseConfig.ts.
+// - Não rode `prisma format` neste arquivo: o formatador do Prisma força
+//   indentação de 2 espaços, contrariando o padrão de 4 espaços do projeto.
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// Usuário registrado no sistema. Um usuário é dono dos seus tópicos e das
+// anotações vinculadas a eles. Excluir um usuário remove, em cascata, todos
+// os tópicos vinculados (SCOPE_V0.1: "A exclusão de conta deletará todos os
+// dados do usuário - inclusive seus tópicos e anotações vinculadas.").
+model User {
+    id            String   @id @default(uuid()) @db.Uuid
+    email         String   @unique @db.VarChar(320)
+    username      String   @unique @db.VarChar(64)
+    password_hash String   @db.VarChar(255)
+    created_at    DateTime @default(now()) @db.Timestamptz
+    updated_at    DateTime @updatedAt @db.Timestamptz
+
+    topics Topic[]
+
+    @@map("users")
+}
+
+// Tópico criado por um usuário. Cada tópico guarda um único campo de anotações
+// livre com no máximo 500 caracteres (SCOPE_V0.1). O limite de 3 tópicos por
+// usuário NÃO é aplicado por este schema: será validado no backend, para que
+// mensagens de erro específicas do domínio possam ser devolvidas.
+model Topic {
+    id         String   @id @default(uuid()) @db.Uuid
+    user_id    String   @db.Uuid
+    name       String   @db.VarChar(120)
+    notes      String   @default("") @db.VarChar(500)
+    created_at DateTime @default(now()) @db.Timestamptz
+    updated_at DateTime @updatedAt @db.Timestamptz
+
+    user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@index([user_id])
+    @@map("topics")
+}

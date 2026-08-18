@@ -18,7 +18,9 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | [src/](src/) | Código-fonte |
 | [src/backend/](src/backend/) | Contém o código-fonte relacionado ao backend |
 | [src/backend/config/](src/backend/config/) | Configurações de inicialização do backend |
+| [src/backend/database/](src/backend/database/) | Acesso ao banco de dados (cliente Prisma) |
 | [src/backend/health/](src/backend/health/) | Rotas de healthcheck |
+| [prisma/](prisma/) | Schema e migrations do banco de dados (Prisma) |
 
 ## Arquivos
 
@@ -28,6 +30,8 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | ./ | [package-lock.json](package-lock.json) | Trava as versões exatas das dependências (gerado automaticamente pelo npm) |
 | ./ | [tsconfig.json](tsconfig.json) | Configuração do compilador TypeScript |
 | ./ | [.editorconfig](.editorconfig) | Padronização de indentação e formatação |
+| ./ | [.env.example](.env.example) | Modelo das variáveis de ambiente lidas pelo backend |
+| prisma/ | [schema.prisma](prisma/schema.prisma) | Modelo das entidades persistidas pelo backend |
 | docs/ | [BUILD.md](docs/BUILD.md) | Como compilar, executar e verificar o projeto |
 | docs/decisions | [SCOPE_V0.1.md](docs/decisions/SCOPE_V0.1.md) | Escopo da versão v0.1 |
 | docs/decisions | [VERSIONS_CRITERIA.md](docs/decisions/VERSIONS_CRITERIA.md) | Critério para a enumeração das versões |
@@ -37,4 +41,6 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | src/backend/config/ | [exitCodes.ts](src/backend/config/exitCodes.ts) | Dicionário de códigos de saída do processo do backend |
 | src/backend/config/ | [shutdownSignals.ts](src/backend/config/shutdownSignals.ts) | Dicionário de sinais tratados como pedidos de encerramento ordenado |
 | src/backend/config/ | [httpStatus.ts](src/backend/config/httpStatus.ts) | Códigos de status HTTP retornados pelas rotas |
+| src/backend/config/ | [databaseConfig.ts](src/backend/config/databaseConfig.ts) | Leitura da URL de conexão do PostgreSQL (`DATABASE_URL`) |
+| src/backend/database/ | [prismaClient.ts](src/backend/database/prismaClient.ts) | Instância única do cliente Prisma usada pelo backend |
 | src/backend/health/ | [healthRoutes.ts](src/backend/health/healthRoutes.ts) | Rota `GET /health` |

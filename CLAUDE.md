@@ -318,3 +318,15 @@ Each file below has a single responsibility. The usage rules must be respected i
 - **Responsibility**: Named constants for the HTTP status codes returned by the backend routes, each commented with the meaning of the response.
 - **Usage rule**: No `reply.status`, `reply.code`, or equivalent call may receive a numeric literal. Every response must reference a constant from this file.
 - **Extending**: When a route needs a new HTTP code not yet registered, add the corresponding constant in `httpStatus.ts`, with a brief comment describing the response, **before** using it in the handler.
+
+## `src/backend/config/databaseConfig.ts`
+
+- **Responsibility**: Reads the PostgreSQL connection URL used by the Prisma client from `DATABASE_URL`, without throwing when the variable is missing (it returns an empty URL and an `is_configured` flag instead).
+- **Usage rule**: No `DATABASE_URL` (or any database connection literal) may be read directly from `process.env` outside this file, nor written as a literal anywhere else in the backend. Always obtain this information through `getDatabaseConfig()`.
+- **Extending**: New settings related to the database connection (e.g., connection pool size, statement timeouts) must go here, keeping the same pattern of environment-variable reading without exceptions.
+
+## `src/backend/database/prismaClient.ts`
+
+- **Responsibility**: Instantiates and exposes the singleton `PrismaClient` used by the whole backend, plus explicit `connect` / `disconnect` helpers for the process lifecycle.
+- **Usage rule**: No other module may import `@prisma/client` directly or instantiate `PrismaClient` on its own. Every read/write to the database must go through `getPrismaClient()`.
+- **Extending**: Cross-cutting client configuration (logging, middleware, query extensions) belongs here, so every module using the client picks it up automatically.

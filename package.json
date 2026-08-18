@@ -10,7 +10,11 @@
         "clean": "tsc --build --clean",
         "typecheck": "tsc --noEmit",
         "dev": "tsx watch src/backend/main.ts",
-        "start": "node dist/backend/main.js"
+        "start": "node dist/backend/main.js",
+        "prisma:generate": "prisma generate",
+        "prisma:migrate:dev": "prisma migrate dev",
+        "prisma:migrate:deploy": "prisma migrate deploy",
+        "prisma:studio": "prisma studio"
     },
     "repository": {
         "type": "git",
@@ -21,10 +25,12 @@
     },
     "homepage": "https://github.com/mfigueireddo/notebook#readme",
     "dependencies": {
+        "@prisma/client": "^6.19.3",
         "fastify": "^5.12.0"
     },
     "devDependencies": {
         "@types/node": "^26.2.0",
+        "prisma": "^6.19.3",
         "tsx": "^4.23.12",
         "typescript": "^7.0.2"
     },
