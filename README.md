@@ -25,6 +25,7 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | Diretório | Arquivo | Descrição |
 | --- | --- | --- |
 | ./ | [package.json](package.json) | Dependências e scripts de build e execução |
+| ./ | [package-lock.json](package-lock.json) | Trava as versões exatas das dependências (gerado automaticamente pelo npm) |
 | ./ | [tsconfig.json](tsconfig.json) | Configuração do compilador TypeScript |
 | ./ | [.editorconfig](.editorconfig) | Padronização de indentação e formatação |
 | docs/ | [BUILD.md](docs/BUILD.md) | Como compilar, executar e verificar o projeto |
