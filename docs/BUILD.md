@@ -97,12 +97,3 @@ um código HTTP de erro.
 
 > Nesta versão o healthcheck verifica apenas a disponibilidade do processo HTTP.
 > A verificação do PostgreSQL será incluída quando o banco de dados entrar no projeto.
-
-## Estrutura do backend
-
-| Caminho | Descrição |
-| --- | --- |
-| [src/backend/main.ts](../src/backend/main.ts) | Ponto de entrada: sobe o servidor e trata o desligamento ordenado. |
-| [src/backend/server.ts](../src/backend/server.ts) | Cria a instância do Fastify e registra as rotas. |
-| [src/backend/config/serverConfig.ts](../src/backend/config/serverConfig.ts) | Leitura das configurações de host e porta. |
-| [src/backend/health/healthRoutes.ts](../src/backend/health/healthRoutes.ts) | Rota `GET /health`. |
