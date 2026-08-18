@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 
 import { getServerConfig } from "./config/serverConfig.js";
 import type { ServerConfig } from "./config/serverConfig.js";
+import { EXIT_CODES } from "./config/exitCodes.js";
 import { buildServer } from "./server.js";
 
-const FAILURE_EXIT_CODE: number = 1;
 const SHUTDOWN_SIGNALS: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
 
 /**
@@ -30,7 +30,7 @@ function registerShutdownHandlers(server: FastifyInstance): void {
                 await server.close();
             } catch (shutdown_error: unknown) {
                 server.log.error(shutdown_error);
-                process.exit(FAILURE_EXIT_CODE);
+                process.exit(EXIT_CODES["FAILURE"]!.code);
             }
         });
     }
@@ -59,7 +59,7 @@ async function startBackend(): Promise<void> {
         await server.listen({ port: server_config.port, host: server_config.host });
     } catch (startup_error: unknown) {
         server.log.error(startup_error);
-        process.exit(FAILURE_EXIT_CODE);
+        process.exit(EXIT_CODES["FAILURE"]!.code);
     }
 }
 
