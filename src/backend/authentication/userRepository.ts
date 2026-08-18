@@ -11,8 +11,10 @@ import { getPrismaClient } from "../database/prismaClient.js";
  * - Nenhuma função deste arquivo lança exceção. As falhas do banco são devolvidas
  *   como um status explícito no resultado, acompanhadas da causa original em
  *   failure_cause, para que a camada de rota possa registrá-la em log.
- * - O campo password_hash nunca é devolvido por este módulo: os fluxos de cadastro
- *   não precisam dele, e mantê-lo fora dos retornos evita vazá-lo em respostas HTTP.
+ * - O campo password_hash só é devolvido por findCredentialsByEmailOrUsername(), que
+ *   existe unicamente para a conferência de senha no login. Todas as demais funções
+ *   selecionam apenas colunas públicas, de modo que nenhum fluxo consiga vazá-lo em
+ *   uma resposta HTTP por descuido.
  */
 
 type PrismaClientInstance = ReturnType<typeof getPrismaClient>;
@@ -53,6 +55,27 @@ export interface UserCreationResult {
     readonly status: UserCreationStatus;
     readonly user: StoredUser | null;
     readonly failure_cause: unknown;
+}
+
+export interface UserCredentials {
+    readonly user: StoredUser;
+    readonly password_hash: string;
+}
+
+export type CredentialsFetchStatus = "found" | "not_found" | "database_error";
+
+export interface CredentialsFetchResult {
+    readonly status: CredentialsFetchStatus;
+    readonly credentials: UserCredentials | null;
+    readonly failure_cause: unknown;
+}
+
+interface UserCredentialsRow {
+    readonly id: string;
+    readonly email: string;
+    readonly username: string;
+    readonly password_hash: string;
+    readonly created_at: Date;
 }
 
 /**
@@ -194,5 +217,89 @@ export async function createUser(new_user_record: NewUserRecord): Promise<UserCr
         }
 
         return { status: "database_error", user: null, failure_cause: creation_error };
+    }
+}
+
+/**
+ * Objetivo: Buscar o usuário que o login está tentando acessar, trazendo junto o
+ * hash da senha para que a conferência possa ser feita sem uma segunda consulta.
+ *
+ * Descrição:
+ * 1. Consulta os usuários cujo email OU nome de usuário coincidem com os candidatos.
+ * 2. Dá preferência à correspondência por email; só depois procura a por nome de usuário.
+ * 3. Devolve "not_found" quando nenhum registro coincide.
+ * 4. Em caso de falha do banco, devolve "database_error" sem propagar a exceção.
+ *
+ * Parâmetros:
+ * - email_candidate: O identificador informado no login, já normalizado como email
+ *   (sem espaços nas pontas e em minúsculas).
+ * - username_candidate: O mesmo identificador, normalizado como nome de usuário
+ *   (apenas sem os espaços das pontas, preservando maiúsculas).
+ *
+ * Retornos esperados:
+ * - Retorna status "found" com os dados públicos e o hash da senha do usuário encontrado.
+ * - Retorna status "not_found" e credenciais nulas quando nenhum usuário coincide.
+ * - Retorna status "database_error", credenciais nulas e a causa original em failure_cause
+ *   quando o banco não responde.
+ *
+ * Assertivas de saída:
+ * - Nenhuma linha do banco é alterada: a função é somente de leitura.
+ *
+ * Restrições:
+ * - A preferência pelo email no passo 2 evita ambiguidade: como o cadastro não proíbe
+ *   o caractere "@" no nome de usuário, um mesmo texto poderia, em tese, casar com o
+ *   email de um usuário e com o nome de usuário de outro. Sem um critério fixo, qual
+ *   dos dois responderia dependeria da ordem devolvida pelo banco.
+ * - O hash devolvido serve apenas para a conferência da senha e nunca deve alcançar
+ *   uma resposta HTTP.
+ */
+export async function findCredentialsByEmailOrUsername(
+    email_candidate: string,
+    username_candidate: string
+): Promise<CredentialsFetchResult> {
+    const prisma_client: PrismaClientInstance = getPrismaClient();
+
+    try {
+        const matching_users: UserCredentialsRow[] = await prisma_client.user.findMany({
+            where: {
+                OR: [{ email: email_candidate }, { username: username_candidate }]
+            },
+            select: { id: true, email: true, username: true, password_hash: true, created_at: true }
+        });
+
+        let selected_user: UserCredentialsRow | null = null;
+        for (const matching_user of matching_users) {
+            if (matching_user.email === email_candidate) {
+                selected_user = matching_user;
+                break;
+            }
+        }
+        if (selected_user === null) {
+            for (const matching_user of matching_users) {
+                if (matching_user.username === username_candidate) {
+                    selected_user = matching_user;
+                    break;
+                }
+            }
+        }
+        if (selected_user === null) {
+            return { status: "not_found", credentials: null, failure_cause: NO_FAILURE_CAUSE };
+        }
+
+        return {
+            status: "found",
+            credentials: {
+                user: {
+                    id: selected_user.id,
+                    email: selected_user.email,
+                    username: selected_user.username,
+                    created_at: selected_user.created_at
+                },
+                password_hash: selected_user.password_hash
+            },
+            failure_cause: NO_FAILURE_CAUSE
+        };
+    } catch (fetch_error: unknown) {
+        return { status: "database_error", credentials: null, failure_cause: fetch_error };
     }
 }

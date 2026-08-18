@@ -38,10 +38,12 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | docs/decisions | [VERSIONS_CRITERIA.md](docs/decisions/VERSIONS_CRITERIA.md) | Critério para a enumeração das versões |
 | src/backend/ | [main.ts](src/backend/main.ts) | Ponto de entrada: sobe o servidor e trata o desligamento ordenado |
 | src/backend/ | [server.ts](src/backend/server.ts) | Cria a instância do Fastify e registra as rotas |
-| src/backend/authentication/ | [authenticationRoutes.ts](src/backend/authentication/authenticationRoutes.ts) | Rota `POST /authentication/users` (cadastro de usuário) |
+| src/backend/authentication/ | [authenticationRoutes.ts](src/backend/authentication/authenticationRoutes.ts) | Rotas `POST /authentication/users` (cadastro) e `POST /authentication/sessions` (login) |
 | src/backend/authentication/ | [registerUser.ts](src/backend/authentication/registerUser.ts) | Fluxo de cadastro: normalização, checagem de unicidade e persistência |
+| src/backend/authentication/ | [authenticateUser.ts](src/backend/authentication/authenticateUser.ts) | Fluxo de login: busca por email ou nome de usuário e conferência da senha |
 | src/backend/authentication/ | [userRepository.ts](src/backend/authentication/userRepository.ts) | Acesso ao banco de dados da entidade de usuário |
-| src/backend/authentication/ | [passwordHasher.ts](src/backend/authentication/passwordHasher.ts) | Geração do hash das senhas (scrypt) |
+| src/backend/authentication/ | [credentialNormalization.ts](src/backend/authentication/credentialNormalization.ts) | Forma canônica do email e do nome de usuário, compartilhada pelo cadastro e pelo login |
+| src/backend/authentication/ | [passwordHasher.ts](src/backend/authentication/passwordHasher.ts) | Geração e conferência do hash das senhas (scrypt) |
 | src/backend/config/ | [serverConfig.ts](src/backend/config/serverConfig.ts) | Leitura das configurações de host e porta |
 | src/backend/config/ | [exitCodes.ts](src/backend/config/exitCodes.ts) | Dicionário de códigos de saída do processo do backend |
 | src/backend/config/ | [shutdownSignals.ts](src/backend/config/shutdownSignals.ts) | Dicionário de sinais tratados como pedidos de encerramento ordenado |

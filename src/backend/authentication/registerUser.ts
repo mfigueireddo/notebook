@@ -1,3 +1,4 @@
+import { normalizeEmail, normalizeUsername } from "./credentialNormalization.js";
 import { hashPassword } from "./passwordHasher.js";
 import type { PasswordHashResult } from "./passwordHasher.js";
 import { createUser, findTakenCredentials } from "./userRepository.js";
@@ -39,35 +40,6 @@ export interface UserRegistrationResult {
 }
 
 const NO_FAILURE_CAUSE: null = null;
-
-/**
- * Objetivo: Deixar o email em uma forma canônica antes de compará-lo com os já
- * cadastrados e antes de gravá-lo, para que "Fulano@Email.com" e "fulano@email.com"
- * não gerem duas contas distintas.
- *
- * Descrição:
- * 1. Remove os espaços das pontas.
- * 2. Converte todo o texto para minúsculas.
- *
- * Restrições:
- * - A coluna de email no PostgreSQL tem restrição de unicidade sensível a maiúsculas.
- *   A unicidade prometida pelo escopo ("Nome de usuário e email serão ambos ÚNICO")
- *   só se sustenta se toda escrita passar por esta normalização.
- * - O nome de usuário NÃO recebe o mesmo tratamento: ele é exibido ao próprio dono
- *   e deve preservar as maiúsculas escolhidas por ele.
- */
-function normalizeEmail(raw_email: string): string {
-    return raw_email.trim().toLowerCase();
-}
-
-/**
- * Retornos esperados:
- * - Retorna o nome de usuário sem os espaços das pontas, preservando maiúsculas e
- *   minúsculas exatamente como digitadas.
- */
-function normalizeUsername(raw_username: string): string {
-    return raw_username.trim();
-}
 
 /**
  * Objetivo: Cadastrar um usuário novo, garantindo que email e nome de usuário

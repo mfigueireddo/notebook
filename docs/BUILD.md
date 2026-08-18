@@ -203,3 +203,59 @@ Exemplo de conflito (HTTP 409):
     "message": "Este email já está cadastrado."
 }
 ```
+
+## Login
+
+A rota `POST /authentication/sessions` confere as credenciais de uma conta já
+cadastrada. O campo `identifier` aceita **tanto o email quanto o nome de usuário**.
+
+```bash
+curl -i -X POST http://127.0.0.1:3333/authentication/sessions \
+    -H "Content-Type: application/json" \
+    -d '{"identifier":"pessoa","password":"senha-secreta"}'
+```
+
+Resposta esperada (HTTP 200):
+
+```json
+{
+    "id": "0f5a4f0e-6d6a-4f5c-9a3e-6a2f0b5b1c34",
+    "email": "pessoa@exemplo.com",
+    "username": "pessoa",
+    "created_at": "2026-08-18T01:29:58.841Z"
+}
+```
+
+> **Nenhum token é emitido.** A rota apenas informa se as credenciais conferem,
+> porque `docs/decisions/SCOPE_V0.1.md` registra "Especificações sobre JWT" como
+> fora do escopo. Enquanto essas regras não forem definidas, nenhuma rota do
+> backend exige autenticação.
+
+### Regras de validação do corpo
+
+| Campo | Regra |
+| --- | --- |
+| `identifier` | Obrigatório, de 1 a 320 caracteres. Email ou nome de usuário. |
+| `password` | Obrigatória, de 1 a 128 caracteres. |
+
+Os mínimos são mais frouxos do que os do cadastro de propósito: uma senha curta
+demais precisa ser recusada como credencial inválida (401), e não como corpo
+malformado (400), para não revelar a quem tenta adivinhar que aquela senha nem
+sequer poderia existir.
+
+### Respostas de erro
+
+| Status | `code` | Situação |
+| --- | --- | --- |
+| 400 | `FST_ERR_VALIDATION` | Corpo malformado ou fora das regras da tabela acima (resposta gerada pelo próprio Fastify). |
+| 401 | `INVALID_CREDENTIALS` | O identificador não existe **ou** a senha está errada. Os dois casos respondem exatamente a mesma coisa, para não revelar quais contas existem. |
+| 500 | `AUTHENTICATION_FAILED` | Falha interna (banco indisponível ou hash gravado ilegível). O detalhe fica apenas no log do servidor. |
+
+Exemplo de credenciais inválidas (HTTP 401):
+
+```json
+{
+    "code": "INVALID_CREDENTIALS",
+    "message": "Email, nome de usuário ou senha incorretos."
+}
+```
