@@ -286,3 +286,35 @@ Restrictions:
  * - [Business rule or technical constraint]
  */
 ```
+
+---
+
+# AI Instructions - Backend Centralization Files
+
+Some files under `src/backend/config/` centralize decisions that recur throughout the code. **Whenever a value covered by one of these files is needed anywhere in the backend, always consult the corresponding file first and reuse the existing constant.** If the required value is not yet registered, add a new entry to the appropriate file following the pattern already in use — never write the literal directly at the point of use.
+
+Each file below has a single responsibility. The usage rules must be respected in any new or refactored code.
+
+## `src/backend/config/serverConfig.ts`
+
+- **Responsibility**: Reads the initialization settings of the HTTP server (port and host), falling back to default values whenever the environment variables are missing or invalid.
+- **Usage rule**: No port or host value may be read directly from `process.env` outside this file, nor written as a literal anywhere else in the backend. Always obtain this information through `getServerConfig()`.
+- **Extending**: New settings related to server initialization (e.g., connection timeouts, payload limits) must go here, keeping the pattern of environment-variable reading with explicit fallback and validation, without throwing exceptions.
+
+## `src/backend/config/exitCodes.ts`
+
+- **Responsibility**: Dictionary of exit codes used by the backend process, each paired with a readable description of the reason for termination.
+- **Usage rule**: No `process.exit` call may contain a numeric literal. Every abnormal exit must reference an entry of `EXIT_CODES` (e.g., `process.exit(EXIT_CODES["FAILURE"]!.code)`).
+- **Extending**: Each new class of failure that justifies its own exit code must gain a named entry in `EXIT_CODES`, with an explanatory description of the termination reason.
+
+## `src/backend/config/shutdownSignals.ts`
+
+- **Responsibility**: Dictionary of system signals treated as ordered-shutdown requests, each with a description of its typical origin.
+- **Usage rule**: No `process.on` or `process.once` call may receive a literal signal name (e.g., `"SIGINT"`). All shutdown handling must iterate over the entries of `SHUTDOWN_SIGNALS`.
+- **Extending**: New signals that should trigger an ordered shutdown enter as new entries in this dictionary, each with a description of its typical origin.
+
+## `src/backend/config/httpStatus.ts`
+
+- **Responsibility**: Named constants for the HTTP status codes returned by the backend routes, each commented with the meaning of the response.
+- **Usage rule**: No `reply.status`, `reply.code`, or equivalent call may receive a numeric literal. Every response must reference a constant from this file.
+- **Extending**: When a route needs a new HTTP code not yet registered, add the corresponding constant in `httpStatus.ts`, with a brief comment describing the response, **before** using it in the handler.
