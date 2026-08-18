@@ -1,7 +1,7 @@
 /**
  * Configurações de inicialização do servidor HTTP do backend.
  *
- * Restrictions:
+ * Restrições:
  * - Nenhum valor numérico ou textual de configuração deve ser escrito diretamente
  *   nas rotas ou na inicialização do servidor: todos ficam centralizados aqui.
  */
@@ -18,20 +18,20 @@ export interface ServerConfig {
 }
 
 /**
- * Objective: Lê a porta do servidor a partir da variável de ambiente PORT,
+ * Objetivo: Lê a porta do servidor a partir da variável de ambiente PORT,
  * caindo para o valor padrão sempre que a variável estiver ausente ou inválida.
  *
- * Description:
+ * Descrição:
  * 1. Lê a variável de ambiente PORT.
  * 2. Retorna o valor padrão caso a variável não esteja definida.
  * 3. Converte o texto para inteiro na base decimal.
  * 4. Retorna o valor padrão caso a conversão falhe ou o número esteja fora da faixa válida.
  *
- * Expected Returns:
+ * Retornos esperados:
  * - Retorna o inteiro lido de PORT quando ele está entre MINIMUM_VALID_PORT e MAXIMUM_VALID_PORT.
  * - Retorna DEFAULT_SERVER_PORT quando PORT está ausente, não é numérica ou está fora da faixa.
  *
- * Restrictions:
+ * Restrições:
  * - Não lança exceções: uma configuração inválida é uma condição esperada e é
  *   tratada por controle de fluxo explícito.
  */
@@ -53,7 +53,7 @@ function readServerPort(): number {
 }
 
 /**
- * Expected Returns:
+ * Retornos esperados:
  * - Retorna o conteúdo da variável de ambiente HOST quando ela está definida e não vazia.
  * - Retorna DEFAULT_SERVER_HOST caso contrário.
  */
@@ -67,9 +67,9 @@ function readServerHost(): string {
 }
 
 /**
- * Objective: Monta o objeto de configuração usado para subir o servidor HTTP.
+ * Objetivo: Monta o objeto de configuração usado para subir o servidor HTTP.
  *
- * Assertives of Departure:
+ * Assertivas de saída:
  * - A porta retornada é sempre um inteiro válido dentro da faixa de portas TCP.
  * - O host retornado é sempre uma string não vazia.
  */

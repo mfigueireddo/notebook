@@ -150,6 +150,18 @@ When documenting functions, methods, or any callable unit of code, follow the st
 
 Not every item is mandatory for every function — use **only the items that are relevant**. For example, a simple getter with a self-explanatory name may only need **Description** and **Expected Returns**, while a complex business-logic method should include all seven items.
 
+## Language of the Documentation Items
+
+- **Always write the documentation item titles in Portuguese**, even though this instruction file describes them in English.
+- The item names below are documented in English for reference only — when writing actual documentation in code, use the Portuguese titles:
+  - Objective → **Objetivo**
+  - Description → **Descrição**
+  - Parameters → **Parâmetros**
+  - Expected Returns → **Retornos esperados**
+  - Assertives of Entrance → **Assertivas de entrada**
+  - Assertives of Departure → **Assertivas de saída**
+  - Restrictions → **Restrições**
+
 ## Documentation Items
 
 ### 1. Objective

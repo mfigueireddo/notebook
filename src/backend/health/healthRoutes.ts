@@ -10,18 +10,18 @@ export interface HealthResponse {
 }
 
 /**
- * Objective: Monta a resposta do healthcheck com o estado atual do processo do backend.
+ * Objetivo: Monta a resposta do healthcheck com o estado atual do processo do backend.
  *
- * Description:
+ * Descrição:
  * 1. Lê o tempo de vida do processo através de process.uptime(), que retorna segundos fracionários.
  * 2. Arredonda o valor para segundos inteiros.
  * 3. Registra o instante da verificação no formato ISO 8601 (UTC).
  *
- * Expected Returns:
+ * Retornos esperados:
  * - Retorna sempre um HealthResponse com status "ok": se o processo não estivesse
  *   saudável, esta função não seria alcançada, pois o servidor não responderia.
  *
- * Restrictions:
+ * Restrições:
  * - Esta versão verifica apenas a disponibilidade do processo HTTP. A verificação
  *   de dependências externas (PostgreSQL via Prisma) será adicionada quando o
  *   banco de dados entrar no projeto.
@@ -38,21 +38,21 @@ function buildHealthResponse(): HealthResponse {
 }
 
 /**
- * Objective: Registra a rota GET /health na instância do Fastify recebida.
+ * Objetivo: Registra a rota GET /health na instância do Fastify recebida.
  *
- * Description:
+ * Descrição:
  * 1. Declara a rota GET /health com o schema de resposta esperado.
  * 2. Ao ser chamada, monta a resposta de saúde e a devolve com status 200.
  *
- * Parameters:
+ * Parâmetros:
  * - server: Instância do Fastify ainda não escutando em nenhuma porta. As rotas
  *   precisam ser registradas antes da chamada a listen().
  *
- * Assertives of Entrance:
+ * Assertivas de entrada:
  * - A rota /health ainda não pode ter sido registrada nesta instância; o Fastify
  *   rejeita rotas duplicadas.
  *
- * Assertives of Departure:
+ * Assertivas de saída:
  * - A instância passa a responder GET /health com HTTP 200 e corpo JSON.
  */
 export async function registerHealthRoutes(server: FastifyInstance): Promise<void> {
