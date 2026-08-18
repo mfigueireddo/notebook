@@ -34,4 +34,7 @@ Estado do projeto: v0.1 (em desenvolvimento). Acessar o [planejamento](docs/deci
 | src/backend/ | [main.ts](src/backend/main.ts) | Ponto de entrada: sobe o servidor e trata o desligamento ordenado |
 | src/backend/ | [server.ts](src/backend/server.ts) | Cria a instância do Fastify e registra as rotas |
 | src/backend/config/ | [serverConfig.ts](src/backend/config/serverConfig.ts) | Leitura das configurações de host e porta |
+| src/backend/config/ | [exitCodes.ts](src/backend/config/exitCodes.ts) | Dicionário de códigos de saída do processo do backend |
+| src/backend/config/ | [shutdownSignals.ts](src/backend/config/shutdownSignals.ts) | Dicionário de sinais tratados como pedidos de encerramento ordenado |
+| src/backend/config/ | [httpStatus.ts](src/backend/config/httpStatus.ts) | Códigos de status HTTP retornados pelas rotas |
 | src/backend/health/ | [healthRoutes.ts](src/backend/health/healthRoutes.ts) | Rota `GET /health` |
