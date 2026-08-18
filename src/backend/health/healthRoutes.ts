@@ -1,7 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
+import { HTTP_STATUS_OK } from "../config/httpStatus.js";
+
 const HEALTH_ROUTE_PATH: string = "/health";
-const HTTP_STATUS_OK: number = 200;
 
 export interface HealthResponse {
     readonly status: "ok";
