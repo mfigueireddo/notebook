@@ -330,3 +330,10 @@ Each file below has a single responsibility. The usage rules must be respected i
 - **Responsibility**: Instantiates and exposes the singleton `PrismaClient` used by the whole backend, plus explicit `connect` / `disconnect` helpers for the process lifecycle.
 - **Usage rule**: No other module may import `@prisma/client` directly or instantiate `PrismaClient` on its own. Every read/write to the database must go through `getPrismaClient()`.
 - **Extending**: Cross-cutting client configuration (logging, middleware, query extensions) belongs here, so every module using the client picks it up automatically.
+
+---
+
+# AI Instructions - Keeping Documentation in Sync
+
+- **Whenever a file or directory is created or deleted, always update [README.md](README.md) in the same change**, keeping the "Diretórios" and "Arquivos" tables accurate (add new rows, remove rows for deleted paths).
+- **Whenever something related to compilation or execution changes** (build scripts, `package.json` scripts, environment variables, Prisma commands, run instructions, prerequisites, etc.), **always update [docs/BUILD.md](docs/BUILD.md)** so it keeps describing the current way to compile, run, and verify the project.
