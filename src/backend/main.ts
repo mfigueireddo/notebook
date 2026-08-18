@@ -4,6 +4,7 @@ import { getServerConfig } from "./config/serverConfig.js";
 import type { ServerConfig } from "./config/serverConfig.js";
 import { EXIT_CODES } from "./config/exitCodes.js";
 import { SHUTDOWN_SIGNALS } from "./config/shutdownSignals.js";
+import { connectPrismaClient, disconnectPrismaClient } from "./database/prismaClient.js";
 import { buildServer } from "./server.js";
 
 /**
@@ -13,13 +14,15 @@ import { buildServer } from "./server.js";
  * Descrição:
  * 1. Para cada sinal de desligamento conhecido, registra um ouvinte único.
  * 2. Ao receber o sinal, pede o fechamento do servidor Fastify.
- * 3. Encerra o processo com código de falha caso o fechamento não conclua.
+ * 3. Fecha a conexão do Prisma com o PostgreSQL.
+ * 4. Encerra o processo com código de falha caso o fechamento não conclua.
  *
  * Assertivas de entrada:
  * - O servidor recebido já deve estar escutando.
  *
  * Assertivas de saída:
- * - O processo termina após o fechamento do servidor, com ou sem sucesso.
+ * - O processo termina após o fechamento do servidor e da conexão com o banco,
+ *   com ou sem sucesso.
  */
 function registerShutdownHandlers(server: FastifyInstance): void {
     for (const shutdown_entry of Object.values(SHUTDOWN_SIGNALS)) {
@@ -27,6 +30,7 @@ function registerShutdownHandlers(server: FastifyInstance): void {
             server.log.info(`Sinal ${shutdown_entry.signal} recebido (${shutdown_entry.description}). Encerrando o servidor.`);
             try {
                 await server.close();
+                await disconnectPrismaClient();
             } catch (shutdown_error: unknown) {
                 server.log.error(shutdown_error);
                 process.exit(EXIT_CODES["FAILURE"]!.code);
@@ -36,23 +40,35 @@ function registerShutdownHandlers(server: FastifyInstance): void {
 }
 
 /**
- * Objetivo: Ponto de entrada do backend: monta o servidor, registra o desligamento
- * ordenado e coloca a aplicação para escutar na porta configurada.
+ * Objetivo: Ponto de entrada do backend: monta o servidor, abre a conexão com o
+ * banco, registra o desligamento ordenado e coloca a aplicação para escutar na
+ * porta configurada.
  *
  * Descrição:
  * 1. Lê a configuração de host e porta.
  * 2. Constrói a instância do Fastify com as rotas registradas.
  * 3. Registra os tratadores de desligamento.
- * 4. Inicia a escuta; em caso de falha, registra o erro e encerra com código de falha.
+ * 4. Abre a conexão com o PostgreSQL; se falhar, encerra com o código de falha de banco.
+ * 5. Inicia a escuta; em caso de falha, registra o erro e encerra com código de falha.
  *
  * Restrições:
  * - Esta é a única função do backend autorizada a encerrar o processo.
+ * - A conexão com o banco é aberta ANTES da escuta, de propósito: um backend que
+ *   aceita requisições sem banco só descobriria o problema ao responder erro a um
+ *   usuário. Falhar na inicialização torna o problema visível de imediato.
  */
 async function startBackend(): Promise<void> {
     const server_config: ServerConfig = getServerConfig();
     const server: FastifyInstance = await buildServer();
 
     registerShutdownHandlers(server);
+
+    try {
+        await connectPrismaClient();
+    } catch (database_error: unknown) {
+        server.log.error(database_error, EXIT_CODES["DATABASE_CONNECTION_FAILURE"]!.description);
+        process.exit(EXIT_CODES["DATABASE_CONNECTION_FAILURE"]!.code);
+    }
 
     try {
         await server.listen({ port: server_config.port, host: server_config.host });

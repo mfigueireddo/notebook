@@ -9,6 +9,7 @@
  */
 
 const GENERIC_FAILURE_CODE: number = 1;
+const DATABASE_CONNECTION_FAILURE_CODE: number = 2;
 
 export interface ExitCodeEntry {
     readonly code: number;
@@ -19,5 +20,9 @@ export const EXIT_CODES: Readonly<Record<string, ExitCodeEntry>> = {
     FAILURE: {
         code: GENERIC_FAILURE_CODE,
         description: "Falha genérica durante a inicialização ou o encerramento ordenado do servidor."
+    },
+    DATABASE_CONNECTION_FAILURE: {
+        code: DATABASE_CONNECTION_FAILURE_CODE,
+        description: "O backend não conseguiu abrir a conexão com o PostgreSQL durante a inicialização."
     }
 } as const;

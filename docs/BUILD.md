@@ -16,12 +16,17 @@ Como compilar e executar o backend do projeto.
 npm install
 ```
 
-O pacote `esbuild` (dependência do `tsx`) usa script de instalação. Caso o npm
-peça aprovação, execute:
+Alguns pacotes usam scripts de instalação. Caso o npm peça aprovação, execute:
 
 ```bash
 npm install-scripts approve esbuild
+npm install-scripts approve prisma
+npm install-scripts approve @prisma/client
+npm install-scripts approve @prisma/engines
 ```
+
+O `esbuild` é dependência do `tsx`; os pacotes do Prisma usam os scripts para
+baixar os engines de consulta e para gerar o cliente após a instalação.
 
 ## Compilação
 
@@ -76,10 +81,17 @@ PORT=4000 npm start
 
 ## Banco de dados (Prisma + PostgreSQL)
 
-O projeto usa o Prisma como ORM sobre PostgreSQL. Nesta versão o schema já está
-definido em [`prisma/schema.prisma`](../prisma/schema.prisma), mas o backend
-ainda não abre conexão com o banco em nenhum fluxo — os scripts abaixo servem
-para preparar o ambiente quando o banco for entrar em uso.
+O projeto usa o Prisma como ORM sobre PostgreSQL. O backend **abre a conexão com
+o banco durante a inicialização**, antes de começar a escutar na porta: se o
+PostgreSQL não estiver alcançável em `DATABASE_URL`, o processo registra o erro
+e encerra com o código de saída `2` em vez de subir sem banco.
+
+Antes da primeira execução é preciso preparar o ambiente na ordem abaixo:
+
+1. Subir um PostgreSQL e criar o banco apontado por `DATABASE_URL`.
+2. Gerar o cliente do Prisma (`npm run prisma:generate`).
+3. Aplicar as migrations (`npm run prisma:migrate:dev`), que criam as tabelas
+   `users` e `topics`.
 
 Gerar o cliente TypeScript do Prisma (necessário após clonar o projeto ou
 alterar o schema):
@@ -136,4 +148,58 @@ Se o servidor estiver fora do ar, o `curl` falha na conexão em vez de retornar
 um código HTTP de erro.
 
 > Nesta versão o healthcheck verifica apenas a disponibilidade do processo HTTP.
-> A verificação do PostgreSQL será incluída quando o banco de dados entrar no projeto.
+> Como o backend só sobe depois de conectar ao PostgreSQL, um servidor no ar
+> indica que o banco estava alcançável na inicialização — mas não que continua.
+
+## Cadastro de usuário
+
+Com o servidor em execução e as migrations aplicadas, a rota
+`POST /authentication/users` cria uma conta nova.
+
+```bash
+curl -i -X POST http://127.0.0.1:3333/authentication/users \
+    -H "Content-Type: application/json" \
+    -d '{"email":"pessoa@exemplo.com","username":"pessoa","password":"senha-secreta"}'
+```
+
+Resposta esperada (HTTP 201):
+
+```json
+{
+    "id": "0f5a4f0e-6d6a-4f5c-9a3e-6a2f0b5b1c34",
+    "email": "pessoa@exemplo.com",
+    "username": "pessoa",
+    "created_at": "2026-08-18T01:29:58.841Z"
+}
+```
+
+O hash da senha nunca é devolvido pela rota.
+
+### Regras de validação do corpo
+
+| Campo | Regra |
+| --- | --- |
+| `email` | Obrigatório, formato de email, até 320 caracteres. Gravado em minúsculas. |
+| `username` | Obrigatório, de 3 a 64 caracteres. Maiúsculas e minúsculas são preservadas. |
+| `password` | Obrigatória, de 8 a 128 caracteres. |
+
+Campos não listados no corpo são descartados pela validação do Fastify.
+
+### Respostas de erro
+
+| Status | `code` | Situação |
+| --- | --- | --- |
+| 400 | `FST_ERR_VALIDATION` | Corpo malformado ou fora das regras da tabela acima (resposta gerada pelo próprio Fastify). |
+| 409 | `EMAIL_ALREADY_REGISTERED` | O email já pertence a uma conta. |
+| 409 | `USERNAME_ALREADY_REGISTERED` | O nome de usuário já está em uso. |
+| 409 | `CREDENTIALS_ALREADY_TAKEN` | Outra requisição cadastrou as mesmas credenciais no mesmo instante. |
+| 500 | `REGISTRATION_FAILED` | Falha interna (banco indisponível ou erro ao gerar o hash). O detalhe fica apenas no log do servidor. |
+
+Exemplo de conflito (HTTP 409):
+
+```json
+{
+    "code": "EMAIL_ALREADY_REGISTERED",
+    "message": "Este email já está cadastrado."
+}
+```
